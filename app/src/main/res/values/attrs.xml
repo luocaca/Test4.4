@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+
+    <!--<declare-styleable name="titleBar">-->
+        <!--<attr name="title" format="string" />-->
+        <!--<attr name="titleTextSize" format="dimension" />-->
+        <!--<attr name="titleTextColor" format="color" />-->
+        <!--<attr name="titleLeftText" format="string" />-->
+        <!--<attr name="titleLeftBackground" format="color|reference" />-->
+        <!--<attr name="titleLeftTextColor" format="color" />-->
+        <!--<attr name="titleRightText" format="string" />-->
+        <!--<attr name="titleRightBackground" format="color|reference" />-->
+        <!--<attr name="titleRightTextColor" format="color" />-->
+    <!--</declare-styleable>-->
+
+
+</resources>
