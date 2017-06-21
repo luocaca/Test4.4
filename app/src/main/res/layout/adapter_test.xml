@@ -13,6 +13,8 @@
         android:gravity="center"
         android:textColor="#4A5BB9"
         android:textSize="14sp"
-        tools:text="hellow world" />
+        android:text="hellow world"
+        android:background="@color/x_green"
+        />
 
 </LinearLayout>
