@@ -33,6 +33,7 @@
                 android:textSize="40sp" />
 
             <TextView
+                android:id="@+id/tv_test_span"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
@@ -65,23 +66,22 @@
     </android.support.design.widget.AppBarLayout>
 
 
+    <recyclerviewanimation.weidget.MySwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayout3"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:guidance_text_color="@color/colorPrimary"
+        app:guidance_view_bg_color="@android:color/transparent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        app:loadmore_enable="true"
+        app:progress_bar_color="@color/colorPrimary"
+        app:pull_refresh_enable="true">
 
-        <recyclerviewanimation.weidget.MySwipeRefreshLayout
-            android:id="@+id/swipeRefreshLayout3"
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recyclerView3"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:guidance_text_color="@color/colorPrimary"
-            app:guidance_view_bg_color="@android:color/transparent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            app:loadmore_enable="true"
-            app:progress_bar_color="@color/colorPrimary"
-            app:pull_refresh_enable="true"
-            >
-
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/recyclerView3"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-        </recyclerviewanimation.weidget.MySwipeRefreshLayout>
+            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+    </recyclerviewanimation.weidget.MySwipeRefreshLayout>
 
 </android.support.design.widget.CoordinatorLayout>

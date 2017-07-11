@@ -2,9 +2,11 @@ package com.weidget;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ImageView;
 
 import com.alibaba.android.vlayout.R;
 
@@ -15,6 +17,8 @@ import com.alibaba.android.vlayout.R;
 
 public class CustomDialog extends Dialog {
 
+
+    private AnimationDrawable mAnimationDrawable;
 
     public CustomDialog(Context context) {
         super(context, R.style.CustomDialog);
@@ -56,5 +60,22 @@ public class CustomDialog extends Dialog {
     @Override
     public void show() {
         super.show();
+        ImageView img = (ImageView) this.findViewById(R.id.iv_amin_flowar);
+
+        // 加载动画
+        mAnimationDrawable = (AnimationDrawable) img.getDrawable();
+        // 默认进入页面就开启动画
+        if (!mAnimationDrawable.isRunning()) {
+            mAnimationDrawable.start();
+        }
+    }
+
+    @Override
+    public void dismiss() {
+        super.dismiss();
+        // 默认进入页面就开启动画
+        if (mAnimationDrawable.isRunning()) {
+            mAnimationDrawable.stop();
+        }
     }
 }

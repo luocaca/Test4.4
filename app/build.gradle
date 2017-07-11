@@ -31,4 +31,5 @@ dependencies {
     compile 'com.github.limedroid:ARecyclerView:v1.2.1'
     compile 'com.miomin:shswiperefreshlayout:1.3.0'
     compile project(':vlayout')
+    compile 'com.google.code.gson:gson:2.2.4'
 }

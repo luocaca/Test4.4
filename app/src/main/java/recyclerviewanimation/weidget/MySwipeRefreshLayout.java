@@ -11,9 +11,9 @@ import android.animation.ValueAnimator.AnimatorUpdateListener;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
-import android.os.Build;
 import android.os.Build.VERSION;
 import android.support.annotation.LayoutRes;
+import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.NestedScrollingChild;
 import android.support.v4.view.NestedScrollingChildHelper;
 import android.support.v4.view.NestedScrollingParent;
@@ -64,6 +64,20 @@ public class MySwipeRefreshLayout extends FrameLayout implements NestedScrolling
     private String mLoadDefaulText = "";
 
     boolean nestedScrollingEnabled = true;
+    private boolean mNestedScrollInProgress;
+
+
+    /**
+     * luocaca  add  params
+     */
+    // If nested scrolling is enabled, the total amount that needed to be
+    // consumed by this as the nested scrolling parent is used in place of the
+    // overscroll determined by MOVE events in the onTouch handler
+    private float mTotalUnconsumed;
+
+    // Target is returning to its start offset because it was cancelled or a
+    // refresh was triggered.
+    private boolean mReturningToStart;
 
     private final int[] mParentOffsetInWindow = new int[2];
 
@@ -170,50 +184,78 @@ public class MySwipeRefreshLayout extends FrameLayout implements NestedScrolling
     }
 
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        Log.i(TAG, "onInterceptTouchEvent: ");
+//        Log.i(TAG, "onInterceptTouchEvent: ");
+
+        final int action = MotionEventCompat.getActionMasked(ev);
+        int pointerIndex;
+
+        if (mReturningToStart && action == MotionEvent.ACTION_DOWN) {
+            mReturningToStart = false;
+        }
+
+        if (!isEnabled() || mReturningToStart || canChildScrollUp()
+                || mRefreshing || mNestedScrollInProgress) {
+            // Fail fast if we're not in a state where a swipe is possible
+            return false;
+        }
+
         return !this.mPullRefreshEnable && !this.mPullLoadEnable ? false : super.onInterceptTouchEvent(ev);
+//        return true;
     }
 
 
     //开始滑动
     @Override
     public boolean onStartNestedScroll(View child, View target, int nestedScrollAxes) {
-        Log.i(TAG, "onStartNestedScroll:开始滑动 "+nestedScrollAxes);
-
+        Log.i(TAG, "onStartNestedScroll:开始滑动 " + nestedScrollAxes);
         //target 发起滑动的 view，可以不是当前view的直接子view
         //child 包含target的直接子view
         //返回true表示要与target配套滑动，为true则下面的accepted也会被调用
         //mReturningToStart是为了配合onTouchEvent的，这里我们不扩展
-
+        boolean b = !mRefreshing && (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0;
+//        Log.i(TAG, "onStartNestedScroll: 是否拦截" + b);
+        Log.i(TAG, "onStartNestedScroll: 强制拦截" + b);
+//        return  !mRefreshing  && (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0;
         return true;
 
     }
 
+    // 分发   如果  不调用  startNestedScroll  无法通知 parent  联合滑动
     public void onNestedScrollAccepted(View child, View target, int axes) {
-        Log.i(TAG, "onNestedScrollAccepted: "+axes);
         this.mNestedScrollingParentHelper.onNestedScrollAccepted(child, target, axes);
-        if (VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Log.i(TAG, "onNestedScrollAccepted: axes=" + axes);//2 表示垂直
+            // 开始分发  嵌套滑动
             startNestedScroll(axes & ViewCompat.SCROLL_AXIS_VERTICAL);
-        }
+        mTotalUnconsumed = 0;
+        mNestedScrollInProgress = true;
     }
-
-
-
 
 
     //停止滑动
     @Override
     public void onStopNestedScroll(View child) {
         Log.i(TAG, "onStopNestedScroll: 停止滑动");
-        this.mNestedScrollingParentHelper.onStopNestedScroll(child);
+        mNestedScrollInProgress = false;
+//        this.mNestedScrollingParentHelper.onStopNestedScroll(child);
+        if (mTotalUnconsumed > 0) {
+            mTotalUnconsumed = 0;
+        }
+        stopNestedScroll();
+
         this.handlerAction();
     }
 
 
-
     //在滑动前，进行滑动事件分配（询问），consumed是父亲消耗的滑动距离，
     //offsetInWindow 是父亲在窗口中进行的相应的移动，子view需要根据这个进行自身调整（需要的话）
-   //区别于下面的，在这里可以进行父亲预备处理
+    //区别于下面的，在这里可以进行父亲预备处理
+
+    /**
+     * @param dx       水平滑动距离
+     * @param dy       垂直滑动距离
+     * @param consumed 父类消耗掉的距离  x  方向的距离 与  y 方向的距离
+     * @return
+     */
     @Override
     public boolean dispatchNestedPreScroll(int dx, int dy, int[] consumed, int[] offsetInWindow) {
         return getScrollingChildHelper().dispatchNestedPreScroll(dx, dy, consumed, offsetInWindow);
@@ -225,21 +267,36 @@ public class MySwipeRefreshLayout extends FrameLayout implements NestedScrolling
         dispatchNestedScroll(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed,
                 mParentOffsetInWindow);
 
-        Log.i(TAG, "onNestedScroll: ");
         final int dy = dyUnconsumed + mParentOffsetInWindow[1];
+        Log.i(TAG, "onNestedScroll: dy=" + dy);
+
+        if (dy < 0 && !canChildScrollUp()) {
+            mTotalUnconsumed += Math.abs(dy);
+            // TODO
+            //滑动头部
+            this.moveGuidanceView(mTotalUnconsumed);
+        } else {
+//            mTotalUnconsumed -= Math.abs(dy);
+//            if (mTotalUnconsumed <= 0) {
+//                mTotalUnconsumed = 0;
+//                this.moveGuidanceView(mTotalUnconsumed);
+//            }
+        }
+
 
     }
 
-    //当惯性嵌套滚动时被调用
-    @Override
-    public boolean onNestedPreFling(View target, float velocityX, float velocityY) {
-        return super.onNestedPreFling(target, velocityX, velocityY);
-    }
 
-    @Override
-    public boolean onNestedFling(View target, float velocityX, float velocityY, boolean consumed) {
-        return super.onNestedFling(target, velocityX, velocityY, consumed);
-    }
+    /**
+     * @return Whether it is possible for the child view of this layout to
+     * scroll up. Override this if the child view is a custom view.
+     */
+
+
+
+
+
+
 
     @Override
     public void stopNestedScroll() {
@@ -248,28 +305,43 @@ public class MySwipeRefreshLayout extends FrameLayout implements NestedScrolling
     }
 
 
-
-
     @Override
     public void onNestedPreScroll(View target, int dx, int dy, int[] consumed) {
 
+        Log.i(TAG, "onNestedPreScroll: dx=" + dx + "   dy=" + dy + "  mTotalUnconsumed=" + mTotalUnconsumed + "  isConfirm =" + isConfirm);
         if (this.mPullRefreshEnable || this.mPullLoadEnable) {
-            if (Math.abs(dy) <= 250) {
+            if (Math.abs(dy) <= 200 && mTotalUnconsumed > 0) {//&& Math.abs(dy) >= 50
+//                if (dy > 0) {
+//                    mTotalUnconsumed = 0;
+//                }
+
+                //   isConfirm =true   头部滑动，，，不协调滑动
                 if (!this.isConfirm) {
+                    //联动中
                     if (dy < 0 && !this.canChildScrollUp()) {
+                        //↓
+
                         this.mCurrentAction = 0;
                         this.isConfirm = true;
+                        mTotalUnconsumed -= dy;
+                        consumed[1] = dy;
+                        Log.i(TAG, "联动 下");
                     } else if (dy > 0 && !this.canChildScrollDown()) {
+                        //↑
+
+                        consumed[1] = dy - (int) mTotalUnconsumed;
+                        mTotalUnconsumed = 0;
                         this.mCurrentAction = 1;
                         this.isConfirm = true;
+                        Log.i(TAG, "联动 上");
                     }
-
-
                 }
 
                 //滑动头部
                 if (this.moveGuidanceView((float) (-dy))) {
+//                if (this.moveGuidanceView((float) (-dy))) {
                     consumed[1] += dy;
+                    Log.i(TAG, "consumed: " + consumed);
                 }
 
             }
@@ -277,12 +349,13 @@ public class MySwipeRefreshLayout extends FrameLayout implements NestedScrolling
         // Now let our nested parent consume the leftovers
         final int[] parentConsumed = mParentScrollConsumed;
 
-        if (  dispatchNestedPreScroll(dx -consumed[0],dy - consumed[1],parentConsumed,null)){
+        if (dispatchNestedPreScroll(dx - consumed[0], dy - consumed[1], parentConsumed, null)) {
             consumed[0] += parentConsumed[0];
             consumed[1] += parentConsumed[1];
         }
 
     }
+
     private final int[] mParentScrollConsumed = new int[2];
 
     private boolean moveGuidanceView(float distanceY) {
@@ -633,7 +706,10 @@ public class MySwipeRefreshLayout extends FrameLayout implements NestedScrolling
     }
 
 
-
+    @Override
+    public boolean startNestedScroll(int axes) {
+        return getScrollingChildHelper().startNestedScroll(axes);
+    }
 
     @Override
     public boolean hasNestedScrollingParent() {
@@ -648,6 +724,17 @@ public class MySwipeRefreshLayout extends FrameLayout implements NestedScrolling
     }
 
 
+
+    //当惯性嵌套滚动时被调用
+    @Override
+    public boolean onNestedPreFling(View target, float velocityX, float velocityY) {
+        return dispatchNestedPreFling(velocityX, velocityY);
+    }
+
+    @Override
+    public boolean onNestedFling(View target, float velocityX, float velocityY, boolean consumed) {
+        return dispatchNestedFling(velocityX, velocityY, consumed);
+    }
 
     @Override
     public boolean dispatchNestedFling(float velocityX, float velocityY, boolean consumed) {
@@ -666,9 +753,6 @@ public class MySwipeRefreshLayout extends FrameLayout implements NestedScrolling
         }
         return mScrollingChildHelper;
     }
-
-
-
 
 
     public int getNestedScrollAxes() {

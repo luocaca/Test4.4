@@ -1,12 +1,16 @@
 package recyclerviewanimation;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,7 +34,7 @@ public class MainActivity3 extends FragmentActivity {
     private MyAdapt myAdapt;
     private MySwipeRefreshLayout swipeRefreshLayout;
     private XListViewHeader refreshHeadView;
-    private SwipeRefreshLayout refreshLayout ;
+    private SwipeRefreshLayout refreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +42,21 @@ public class MainActivity3 extends FragmentActivity {
         mActivity = this;
         Toast.makeText(mActivity, "hellow world1 ", Toast.LENGTH_LONG).show();
         setContentView(R.layout.activity_main3);
+
+        TextView tv_test_span = (TextView) findViewById(R.id.tv_test_span);
+
+
+        String str=" Hello everyone!";
+        SpannableStringBuilder mSpannableStringBuilder=new SpannableStringBuilder(str);
+
+        mSpannableStringBuilder.setSpan
+                (new ForegroundColorSpan(Color.RED), 1, 3, Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+        mSpannableStringBuilder.setSpan
+                (new ForegroundColorSpan(Color.GREEN), 5, 9, Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+
+
+//        tv_test_span.setText("=================================" + StringFormatUtil.setTextColor(mActivity, "红色的字" +mSpannableStringBuilder,android.R.color.holo_red_dark));
+        tv_test_span.setText(mSpannableStringBuilder);
 
         swipeRefreshLayout = (MySwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout3);
         refreshHeadView = new XListViewHeader(mActivity);
@@ -130,7 +149,7 @@ public class MainActivity3 extends FragmentActivity {
             View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.adapter_test, parent, false);
             MyViewHolder vh = new MyViewHolder(view);
             Log.e(TAG, "onCreateViewHolder: ");
-            Toast.makeText(mActivity, "MyAdapt", Toast.LENGTH_LONG).show();
+//            Toast.makeText(mActivity, "MyAdapt", Toast.LENGTH_LONG).show();
             return vh;
         }
 

@@ -24,15 +24,24 @@
         android:background="@android:color/black"
         android:alpha="0.6"
         android:orientation="vertical"
-        android:padding="11dp"
+        android:padding="9dp"
         >
 
-        <com.weidget.GifView
-            android:id="@+id/gif1"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:enabled="false"
-            loadingview:gif="@drawable/loding_gif1" />
+        <!--<com.weidget.GifView-->
+            <!--android:id="@+id/gif1"-->
+            <!--android:layout_width="50dp"-->
+            <!--android:layout_height="50dp"-->
+            <!--android:enabled="false"-->
+            <!--android:layout_gravity="center_horizontal"-->
+            <!--loadingview:gif="@drawable/loding_gif1" />-->
+
+        <ImageView
+            android:id="@+id/iv_amin_flowar"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:src="@drawable/floawer_anim"
+            />
+
 
         <TextView
             android:layout_width="wrap_content"
